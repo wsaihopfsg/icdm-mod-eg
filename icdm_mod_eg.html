@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICDM-RX/MOD Setup Configurator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 { text-align: center; color: #005A9C; }
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        /* Draggable Palette Items */
+        .palette {
+            flex: 1;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .palette h3 { font-size: 16px; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 5px;}
+        .draggable {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            cursor: grab;
+            text-align: center;
+            font-weight: 500;
+        }
+        .draggable:active { cursor: grabbing; }
+        
+        /* Dropzone Workspace */
+        .workspace {
+            flex: 2;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .dropzone {
+            height: 80px;
+            background: #fafafa;
+            border: 2px dashed #b0bec5;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #78909c;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .dropzone.dragover { background: #e8f5e9; border-color: #4caf50; }
+        
+        /* Result Panel */
+        .result-panel {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            border-radius: 4px;
+        }
+        .result-panel img {
+            max-width: 100%;
+            border: 1px solid #ccc;
+            margin-top: 15px;
+            display: block;
+        }
+        .btn-reset {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+		/* Tooltip Container */
+        .tooltip-container {
+            position: relative;
+            display: inline-block; /* Keeps the hover area tight to the text */
+        }
+
+        /* The Bubble */
+        .tooltip-container .tooltip-bubble {
+            visibility: hidden;
+            width: 280px; /* Adjust this if your definition is very long */
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 100;
+            bottom: 130%; /* Positions it right above the text */
+            left: 50%;
+            transform: translateX(-50%); /* Perfectly centers it */
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.4;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+            pointer-events: none; /* Prevents the bubble from interfering with clicks */
+        }
+
+        /* The little triangle arrow at the bottom of the bubble */
+        .tooltip-container .tooltip-bubble::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        /* Show the bubble on hover */
+        .tooltip-container:hover .tooltip-bubble {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>ICDM-RX/MOD Setup Configurator</h2>
+
+    <div class="container">
+        <div class="palette">
+            <h3>Controllers</h3>
+            <div class="draggable" draggable="true" id="tcp_master">Modbus/TCP Master</div>
+            <div class="draggable" draggable="true" id="tcp_slave">Modbus/TCP Slave</div>
+			<div class="draggable" draggable="true" id="ethernet_master">Ethernet TCP/IP Master</div>
+			<div class="draggable" draggable="true" id="serial_master">Modbus RTU/ASCII Master</div>
+			<div class="draggable" draggable="true" id="serial_slave">Modbus RTU/ASCII Slave</div>
+			<div class="draggable" draggable="true" id="modbus_over_ethernet_master">Modbus over Ethernet TCP/IP Master</div>
+			<div class="draggable" draggable="true" id="tcp_master_slave">Modbus/TCP Master/Slave</div>
+			<div class="draggable" draggable="true" id="raw_ascii_tcp_controller">Raw/ASCII over Ethernet TCP/IP</div>
+
+            <br>
+            <h3>Devices</h3>
+            <div class="draggable" draggable="true" id="rtu_slave">Modbus/RTU</div>
+            <div class="draggable" draggable="true" id="ascii_slave">Modbus/ASCII</div>
+            <div class="draggable" draggable="true" id="raw_ascii_serial">Serial Raw/ASCII</div>
+            <div class="draggable" draggable="true" id="raw_ascii_ethernet">Ethernet TCP/IP Raw/ASCII</div>
+        </div>
+
+        <div class="workspace">
+            <h3>Build Your Setup</h3>
+            <div class="dropzone" id="zone_1" data-type="node">
+                Drop First Device Here
+            </div>
+            <div class="dropzone" id="zone_2" data-type="node">
+                Drop Second Device Here
+            </div>
+			
+			<!--<div style="text-align: left; margin-bottom: 20px;">
+                <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: block; margin-bottom: 10px;">
+                    <input type="checkbox" id="diff_subnet" onchange="checkCombination()">
+                    Masters are on different Ethernet subnets
+                </label>
+                <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: block; margin-bottom: 10px;">
+                    <input type="checkbox" id="multi_master" onchange="checkCombination()">
+                    One Master to Multiple Masters
+                <div style="margin-bottom: 10px;">
+                    <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="private_bus" onchange="checkCombination()">
+                        Enable Private Serial Bus 
+						<span class="tooltip-bubble">
+                            <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
+                                <li style="margin-bottom: 8px;">Contains both a Modbus master and one or more Modbus slaves on the same serial bus.</li>
+                                <li style="margin-bottom: 8px;">Allows only the Modbus master the ability to communicate directly to the Modbus slaves.</li>
+                                <li>May provide access from the Modbus master to public Modbus network(s) via an advanced gateway, such as the ICDM-RX/MOD running Modbus Router firmware.</li>
+                            </ul>
+                        </span>                    </label>
+                </div>
+                <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: block;">
+                    <input type="checkbox" id="remote_devices" onchange="checkCombination()">
+                    Devices are remotely located over Ethernet
+                </label>
+            </div>--->
+			
+			<div style="text-align: left; margin-bottom: 20px;">
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="diff_subnet" onchange="checkCombination()">
+                        Masters are on different Ethernet subnets
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="multi_master" onchange="checkCombination()">
+                        One Master to Multiple Masters
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="private_bus" onchange="checkCombination()">
+                        Enable Private Serial Bus
+                        <span class="tooltip-bubble">
+                            <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
+                                <li style="margin-bottom: 8px;">Contains both a Modbus master and one or more Modbus slaves on the same serial bus.</li>
+                                <li style="margin-bottom: 8px;">Allows only the Modbus master the ability to communicate directly to the Modbus slaves.</li>
+                                <li>May provide access from the Modbus master to public Modbus network(s) via an advanced gateway, such as the ICDM-RX/MOD running Modbus Router firmware.</li>
+                            </ul>
+                        </span>
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="remote_devices" onchange="checkCombination()">
+                        Devices are remotely located over Ethernet
+                    </label>
+                </div>
+				
+				<div style="margin-bottom: 12px;">
+                    <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="read_only" onchange="checkCombination()">
+                        Enable Read Only Modbus Protection
+                        <span class="tooltip-bubble">
+                            <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
+                                <li style="margin-bottom: 8px;">Blocks all standard Modbus write messages from being transmitted out a serial port.</li>
+                                <li>Allows monitoring systems to retrieve data while preventing unauthorized or errant changes.</li>
+                            </ul>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <button class="btn-reset" onclick="resetWorkspace()">Reset Setup</button>
+
+			<div class="result-panel" id="result_panel">
+                <h3 style="margin-top:0;">Configuration Required:</h3>
+                <p style="margin-bottom: 5px;"><strong>Recommended Firmware:</strong> <span id="out_firmware"></span></p>
+                <p id="inline_alt_firmware_container" style="display:none; margin-top: 0px; margin-bottom: 15px; color: #555;">
+                    <strong>Alternate Firmware:</strong> <span id="out_inline_alt_firmware"></span>
+                </p>
+                <p><strong>Manual Reference:</strong> <span id="out_section"></span></p>
+                <img id="out_image" src="" alt="Setup Diagram" style="display:none; margin-bottom: 20px;">
+				
+                <div id="alt_firmware_container" style="display:none; margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ccc;">
+                    <p><strong>Alternate Firmware:</strong> <span id="out_alt_firmware"></span></p>
+                    <p id="alt_section_container" style="display:none;"><strong>Alternate Reference:</strong> <span id="out_alt_section"></span></p>
+                    <img id="out_image_alt" src="" alt="Alternate Setup Diagram" style="display:none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+        // Database of combinations mapped from the manual
+        const solutionDB = {
+            "tcp_master_rtu_slave": {
+                firmware: "Modbus Router",
+                altFirmware: "Modbus/TCP", 
+                section: "Section 2.1.1 - Serial Modbus/RTU Slave(s)",
+                imagePath: "images/section_2_1_1.png"
+            },
+            "tcp_master_ascii_slave": {
+                firmware: "Modbus Router",
+                altFirmware: "Modbus/TCP", 
+                section: "Section 2.1.2 - Serial Modbus/ASCII Slave(s)",
+                imagePath: "images/section_2_1_2.png" 
+            },
+            "tcp_master_raw_ascii_serial": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.1.3 - Serial Raw/ASCII Device(s)",
+                imagePath: "images/section_2_1_3.png" 
+            },
+            "tcp_master_raw_ascii_ethernet": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.1.4 - Ethernet Raw/ASCII Device(s)",
+                imagePath: "images/section_2_1_4.png" 
+            },
+			// Section 3.1.1.1: Master-to-Master (Modbus/TCP and/or Ethernet TCP/IP)
+            "tcp_master_tcp_master": {
+				firmware: "Modbus Router (Shared Memory)",
+                section: "Section 3.1.1.1 - Two Modbus/TCP Masters",
+                imagePath: "images/section_3_1_1_1.png",
+                altFirmware: "Modbus/TCP (Queued Messages)",
+                altSection: "Section 3.2.1.1.1 - Two Modbus/TCP Masters",
+                altImagePath: "images/section_3_2_1_1_1.png"
+            },
+            "tcp_master_ethernet_master": {
+                firmware: "Modbus Router (Shared Memory)",
+                section: "Section 3.1.1.1 - 2 Modbus/TCP Masters and/or Ethernet TCP/IP Masters",
+                imagePath: "images/section_3_1_1_1.png"
+            },
+            "ethernet_master_ethernet_master": {
+                firmware: "Modbus Router (Shared Memory)",
+                section: "Section 3.1.1.1 - 2 Modbus/TCP Masters and/or Ethernet TCP/IP Masters",
+                imagePath: "images/section_3_1_1_1.png"
+            },
+			// Section 3.1.1.2 & 3.2.1.1.2: Two Serial Modbus Masters
+            "serial_master_serial_master": {
+				firmware: "Modbus Router (Shared Memory)",
+                section: "Section 3.1.1.2 - Two Serial Modbus Masters",
+                imagePath: "images/section_3_1_1_2.png",
+                altFirmware: "Modbus/TCP (Queued Messages)",
+                altSection: "Section 3.2.1.1.2 - Two Serial Modbus Masters",
+                altImagePath: "images/section_3_2_1_1_2.png"            },
+			// Section 3.1.2 & 3.2.1.1.3: Ethernet/TCP Masters to Serial Masters
+            "tcp_master_serial_master": {
+                firmware: "Modbus Router (Shared Memory)",
+				section: "Section 3.1.2 - Modbus/TCP and Serial Modbus Masters",
+				imagePath: "images/section_3_1_2.png",
+                altFirmware: "Modbus/TCP (Queued Messages)",
+                altSection: "Section 3.2.1.1.3 - Modbus/TCP and Serial Modbus Masters",
+                altImagePath: "images/section_3_2_1_1_3.png"
+            },
+            "ethernet_master_serial_master": {
+                firmware: "Modbus Router (Shared Memory)",
+                section: "Section 3.1.2 - Modbus/TCP, Ethernet TCP/IP and Serial Masters",
+                imagePath: "images/section_3_1_2.png"
+            },
+			// Section 2.2.1: Modbus/TCP Slave to Serial Raw/ASCII
+            "tcp_slave_raw_ascii_serial": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.2.1 - Raw/ASCII Serial Device(s)",
+                imagePath: "images/section_2_2_1.png"
+            },
+            
+            // Section 2.2.2: Modbus/TCP Slave to Ethernet TCP/IP Raw/ASCII
+            "tcp_slave_raw_ascii_ethernet": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.2.2 - Raw/ASCII Ethernet Device(s)",
+                imagePath: "images/section_2_2_2.png"
+            },
+			// Section 2.3.1: Modbus/TCP Master/Slave to Serial Raw/ASCII
+            "tcp_master_slave_raw_ascii_serial": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.3.1 - Raw/ASCII Serial Device(s)",
+                imagePath: "images/section_2_3_1.png"
+            },
+            
+            // Section 2.3.2: Modbus/TCP Master/Slave to Ethernet TCP/IP Raw/ASCII
+            "tcp_master_slave_raw_ascii_ethernet": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.3.2 - Raw/ASCII Ethernet Device(s)",
+                imagePath: "images/section_2_3_2.png"
+            },
+			// Section 2.4.1: Serial Modbus Master to Serial Modbus/RTU Slave
+            "serial_master_rtu_slave": {
+                firmware: "Modbus Router",
+                altFirmware: "Modbus/TCP",
+                section: "Section 2.4.1 - Serial Modbus/RTU Slave(s)",
+                imagePath: "images/section_2_4_1.png"
+            },
+            
+            // Section 2.4.2: Serial Modbus Master to Serial Modbus/ASCII Slave
+            "serial_master_ascii_slave": {
+                firmware: "Modbus Router",
+                altFirmware: "Modbus/TCP",
+                section: "Section 2.4.2 - Serial Modbus/ASCII Slave(s)",
+                imagePath: "images/section_2_4_2.png"
+            },
+			// Section 2.4.3: Serial Modbus Master to Modbus/TCP Slave
+            "serial_master_tcp_slave": {
+                firmware: "Modbus Router",
+                section: "Section 2.4.3 - Modbus/TCP Slaves",
+                imagePath: "images/section_2_4_3.png"
+            },
+            
+            // Section 2.4.4: Serial Modbus Master to Serial Raw/ASCII Device
+            "serial_master_raw_ascii_serial": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.4.4 - Serial Raw/ASCII Device(s)",
+                imagePath: "images/section_2_4_4.png"
+            },
+
+            // Section 2.4.5: Serial Modbus Master to Ethernet Raw/ASCII Device
+            "serial_master_raw_ascii_ethernet": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.4.5 - Raw/ASCII Ethernet Device(s)",
+                imagePath: "images/section_2_4_5.png"
+            },
+			// Section 2.5.1: Serial Modbus Slave to Serial Raw/ASCII Device
+            "serial_slave_raw_ascii_serial": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.5.1 - Serial Raw/ASCII Device(s)",
+                imagePath: "images/section_2_5_1.png"
+            },
+            
+            // Section 2.5.2: Serial Modbus Slave to Ethernet TCP/IP Raw/ASCII Device
+            "serial_slave_raw_ascii_ethernet": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.5.2 - Ethernet TCP/IP Raw/ASCII Device(s)",
+                imagePath: "images/section_2_5_2.png"
+            },
+			// Section 2.6.1: Modbus over Ethernet TCP/IP Master to Serial Modbus/RTU Slave
+            "modbus_over_ethernet_master_rtu_slave": {
+                firmware: "Modbus Router",
+                altFirmware: "Modbus/TCP",
+                section: "Section 2.6.1 - Serial Modbus/RTU Slave(s)",
+                imagePath: "images/section_2_6_1.png"
+            },
+            
+            // Section 2.6.2: Modbus over Ethernet TCP/IP Master to Serial Modbus/ASCII Slave
+            "modbus_over_ethernet_master_ascii_slave": {
+                firmware: "Modbus Router",
+                altFirmware: "Modbus/TCP",
+                section: "Section 2.6.2 - Serial Modbus/ASCII Slave(s)",
+                imagePath: "images/section_2_6_2.png"
+            },
+
+            // Section 2.6.3: Modbus over Ethernet TCP/IP Master to Modbus/TCP Slave
+            "modbus_over_ethernet_master_tcp_slave": {
+                firmware: "Modbus Router",
+                section: "Section 2.6.3 - Modbus/TCP Slaves",
+                imagePath: "images/section_2_6_3.png"
+            },
+			// Section 2.7.1: Ethernet TCP/IP Raw/ASCII Controller to Serial Raw/ASCII Device
+            "raw_ascii_tcp_controller_raw_ascii_serial": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.7.1 - Serial Raw/ASCII Device(s)",
+                imagePath: "images/section_2_7_1.png"
+            },
+            
+            // Section 2.7.2: Ethernet TCP/IP Raw/ASCII Controller to Ethernet TCP/IP Raw/ASCII Device
+            "raw_ascii_tcp_controller_raw_ascii_ethernet": {
+                firmware: "Modbus/TCP",
+                section: "Section 2.7.2 - Ethernet TCP/IP Raw/ASCII Device(s)",
+                imagePath: "images/section_2_7_2.png"
+            },
+            // Section 3.2.2: Slave-to-Slave Connectivity
+            "tcp_slave_tcp_slave": {
+                firmware: "Modbus/TCP",
+                section: "Section 3.2.2.1 - Modbus/TCP Slave-to-Slave Connectivity",
+                imagePath: "images/section_3_2_2_1.png"
+            },
+            "tcp_slave_serial_slave": {
+                firmware: "Modbus/TCP",
+                section: "Section 3.2.2.2 - Modbus/TCP Slave to Serial Modbus Slave",
+                imagePath: "images/section_3_2_2_2.png"
+            },
+            "serial_slave_serial_slave": {
+                firmware: "Modbus/TCP",
+                section: "Section 3.2.2.1.1 - Two Modbus Serial Modbus Slaves",
+                imagePath: "images/section_3_2_2_1_1.png"
+            }
+        };
+
+        // Global State variables
+        let node1 = null;
+        let node2 = null;
+
+        // Drag and Drop Logic
+        const draggables = document.querySelectorAll('.draggable');
+        const dropzones = document.querySelectorAll('.dropzone');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.id);
+            });
+        });
+
+        dropzones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                
+                const draggedId = e.dataTransfer.getData('text/plain');
+                const draggedElement = document.getElementById(draggedId);
+                
+                // Visual update of the dropzone
+                zone.innerText = draggedElement.innerText;
+                zone.style.background = "#e3f2fd";
+                zone.style.border = "2px solid #2196f3";
+                zone.style.color = "#000";
+
+                // Register selection based on the specific zone's ID
+                if(zone.id === "zone_1") node1 = draggedId;
+                if(zone.id === "zone_2") node2 = draggedId;
+
+                checkCombination();
+            });
+        });
+
+		function checkCombination() {
+            if (node1 && node2) {
+                // Check both order combinations so the user can drop in any order
+                let comboKey = `${node1}_${node2}`;
+                let result = solutionDB[comboKey];
+
+                // Fallback for reverse order
+                if (!result) {
+                    comboKey = `${node2}_${node1}`;
+                    result = solutionDB[comboKey];
+                }
+
+                const panel = document.getElementById('result_panel');
+                const altContainer = document.getElementById('alt_firmware_container');
+                const isDiffSubnet = document.getElementById('diff_subnet') ? document.getElementById('diff_subnet').checked : false;
+                const isMultiMaster = document.getElementById('multi_master') ? document.getElementById('multi_master').checked : false;
+				const isPrivateBus = document.getElementById('private_bus') ? document.getElementById('private_bus').checked : false; // Read new checkbox
+				const isRemote = document.getElementById('remote_devices') ? document.getElementById('remote_devices').checked : false; // Read new checkbox
+				const isReadOnly = document.getElementById('read_only') ? document.getElementById('read_only').checked : false; // Read new checkbox
+				
+                if (result) {
+                    let finalFirmware = result.firmware;
+                    let finalSection = result.section;
+                    let finalImage = result.imagePath;
+                    let finalAltFirmware = result.altFirmware;
+                    let finalAltSection = result.altSection;
+                    let finalAltImage = result.altImagePath;
+
+                    // SECTION 2.4.6, 2.4.7, 2.4.8 & 2.5.3 OVERRIDE LOGIC
+                    if (isRemote) {
+                        if (comboKey === "serial_master_rtu_slave") {
+                            finalFirmware = "Modbus Router (Both Gateways)";
+                            finalAltFirmware = "Modbus Router (Master Gateway) & Modbus/TCP (Remote Gateway)";
+                            finalSection = "Section 2.4.6 - Remote Serial Modbus/RTU Slave(s) (Requires 2 Gateways for Serial Tunneling)";
+                            finalImage = "images/section_2_4_6.png";
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        } else if (comboKey === "serial_master_ascii_slave") {
+                            finalFirmware = "Modbus Router (Both Gateways)";
+                            finalAltFirmware = "Modbus Router (Master Gateway) & Modbus/TCP (Remote Gateway)";
+                            finalSection = "Section 2.4.7 - Remote Serial Modbus/ASCII Slave(s) (Requires 2 Gateways for Serial Tunneling)";
+                            finalImage = "images/section_2_4_7.png";
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        } else if (comboKey === "serial_master_raw_ascii_serial") {
+                            finalFirmware = "Modbus Router (Master Gateway) & Modbus/TCP (Remote Gateway)";
+                            finalAltFirmware = null;
+                            finalSection = "Section 2.4.8 - Remote Raw/ASCII Serial Device(s) (Requires 2 Gateways for Serial Tunneling)";
+                            finalImage = "images/section_2_4_8.png";
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        } else if (comboKey === "serial_slave_raw_ascii_serial") {
+                            finalFirmware = "Modbus/TCP (Both Gateways)";
+                            finalAltFirmware = null;
+                            finalSection = "Section 2.5.3 - Remote Raw/ASCII Serial Device(s) (Requires 2 Gateways for Serial Tunneling)";
+                            finalImage = "images/section_2_5_3.png";
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A";
+                            finalSection = "Invalid: Remote configurations via Ethernet in Section 2.4 only apply to Serial Modbus Masters connecting to Serial Slaves or Serial Raw/ASCII Devices.";
+                            finalImage = "";
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        }
+                    }                    
+                    // SECTION 3.1.3 OVERRIDE LOGIC
+                    if (isDiffSubnet && (comboKey === "tcp_master_tcp_master" || comboKey === "tcp_master_ethernet_master" || comboKey === "ethernet_master_ethernet_master")) {
+                        finalFirmware = "Modbus Router (Shared Memory)";
+                        finalSection = "Section 3.1.3 - Masters on Different Ethernet Subnets (Requires 2 Gateways for Serial Tunneling)";
+                        finalImage = "images/section_3_1_3.png"; 
+                        finalAltFirmware = null; // Clear alternate layout for this override
+                        finalAltSection = null;
+                        finalAltImage = null;
+                    }
+
+                    // SECTION 3.2.1.2 OVERRIDE LOGIC
+                    if (isMultiMaster) {
+                        if (comboKey === "tcp_master_tcp_master" || comboKey === "serial_master_serial_master" || comboKey === "tcp_master_serial_master") {
+                            finalFirmware = "Modbus/TCP (Queued Messages)";
+                            finalSection = "Section 3.2.1.2 - One Modbus Master to Multiple Modbus Masters";
+                            finalImage = "images/section_3_2_1_2.png";
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A";
+                            finalSection = "Invalid: Section 3.2.1.2 only supports Modbus/TCP and Serial Modbus Masters.";
+                            finalImage = "";
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        }
+                    }
+					// SECTION 4.2.1 OVERRIDE LOGIC
+                    if (isPrivateBus) {
+                        // A Private Serial Bus requires at least one Serial Modbus Master
+                        if (comboKey.includes("serial_master")) {
+                            finalFirmware = "Modbus Router";
+                            finalSection = "Section 4.2.1 - Private Serial Bus Capabilities";
+                            finalImage = "images/section_4_2_1.png"; // Save your screenshot from page 36 here
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A";
+                            finalSection = "Invalid: A Private Serial Bus topology requires a Serial Modbus Master.";
+                            finalImage = "";
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        }
+                    }
+					// SECTION 5.1 OVERRIDE LOGIC
+                    if (isReadOnly) {
+                        // The Read-Only feature is exclusively available on Modbus Router firmware
+                        // We check if the base topology's recommended OR alternate firmware uses it
+                        if (finalFirmware.includes("Modbus Router") || (finalAltFirmware && finalAltFirmware.includes("Modbus Router"))) {
+                            finalFirmware = "Modbus Router";
+                            finalSection = "Section 5.1 - Implementing the Disable Writes (Read Only) Option";
+                            finalImage = "images/section_5_1.png"; // Save the image from page 48 here
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A";
+                            finalSection = "Invalid: The Read-Only security feature is exclusively supported by the Modbus Router firmware. It cannot be used with topologies that strictly require Modbus/TCP firmware.";
+                            finalImage = "";
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        }
+                    }
+                    // Populate Primary Layout
+                    document.getElementById('out_firmware').innerText = finalFirmware;
+                    document.getElementById('out_section').innerText = finalSection;
+                    
+                    const imgEl = document.getElementById('out_image');
+                    imgEl.src = finalImage;
+                    imgEl.alt = finalSection;
+                    
+                    // Only display the primary image if it has a valid source
+                    if(finalImage !== "") {
+                        imgEl.style.display = "block"; 
+                    } else {
+                        imgEl.style.display = "none";
+                    }
+                    
+                    // Populate Alternate Layout
+					// Grab the new inline container
+                    const inlineAltContainer = document.getElementById('inline_alt_firmware_container');
+
+                    // Populate Alternate Layout Logic
+                    if (finalAltFirmware) {
+                        
+                        if (!finalAltImage) {
+                            // CASE 1: Alternate firmware exists, but NO alternate image
+                            // Show inline text, hide the bottom layout
+                            document.getElementById('out_inline_alt_firmware').innerText = finalAltFirmware;
+                            inlineAltContainer.style.display = "block";
+                            altContainer.style.display = "none";
+                            
+                        } else {
+                            // CASE 2: Alternate firmware AND an alternate image exist
+                            // Hide inline text, show the bottom layout
+                            inlineAltContainer.style.display = "none";
+                            document.getElementById('out_alt_firmware').innerText = finalAltFirmware;
+                            altContainer.style.display = "block";
+                            
+                            // Handle Alternate Section Text
+                            if (finalAltSection) {
+                                document.getElementById('out_alt_section').innerText = finalAltSection;
+                                document.getElementById('alt_section_container').style.display = "block";
+                            } else {
+                                document.getElementById('alt_section_container').style.display = "none";
+                            }
+
+                            // Handle Alternate Image
+                            const imgAltEl = document.getElementById('out_image_alt');
+                            imgAltEl.src = finalAltImage;
+                            imgAltEl.alt = finalAltSection || "Alternate Diagram";
+                            imgAltEl.style.display = "block";
+                        }
+
+                    } else {
+                        // CASE 3: No alternate firmware at all
+                        // Hide both containers
+                        inlineAltContainer.style.display = "none";
+                        altContainer.style.display = "none";
+                    }
+                    
+                    panel.style.display = "block";
+                    panel.style.borderLeftColor = finalFirmware === "N/A" ? "#f44336" : "#4caf50";
+                } else {
+                    document.getElementById('out_firmware').innerText = "N/A";
+                    document.getElementById('out_section').innerText = "Invalid or missing combination in manual.";
+                    altContainer.style.display = "none";
+                    document.getElementById('out_image').style.display = "none";
+                    panel.style.display = "block";
+                    panel.style.borderLeftColor = "#f44336";
+                }
+            }
+        }        
+        function resetWorkspace() {
+            node1 = null;
+            node2 = null;
+            
+            const zone1 = document.getElementById('zone_1');
+            zone1.innerText = "Drop First Device Here";
+            zone1.style = "";
+
+            const zone2 = document.getElementById('zone_2');
+            zone2.innerText = "Drop Second Device Here";
+            zone2.style = "";
+
+			document.getElementById('diff_subnet').checked = false;
+			if(document.getElementById('multi_master')) document.getElementById('multi_master').checked = false;
+			if(document.getElementById('private_bus')) document.getElementById('private_bus').checked = false;
+			if(document.getElementById('remote_devices')) document.getElementById('remote_devices').checked = false;
+			if(document.getElementById('read_only')) document.getElementById('read_only').checked = false;
+            document.getElementById('result_panel').style.display = "none";
+        }
+    </script>
+</body>
+</html>
