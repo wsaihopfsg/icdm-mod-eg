@@ -133,10 +133,42 @@
             visibility: visible;
             opacity: 1;
         }
+		/* Mobile Rotation Overlay */
+        #rotate-message {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #005A9C;
+            color: white;
+            z-index: 9999;
+            text-align: center;
+            padding-top: 35vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        /* If the screen is a mobile device AND in portrait mode */
+        @media only screen and (max-width: 768px) and (orientation: portrait) {
+            #rotate-message {
+                display: block; /* Show the warning */
+            }
+            body {
+                overflow: hidden; /* Prevent scrolling behind the warning */
+            }
+            .container, h2 {
+                display: none; /* Hide the app to avoid messy rendering */
+            }
+        }
     </style>
 </head>
 <body>
-
+	<div id="rotate-message">
+        <div style="font-size: 50px; margin-bottom: 20px;">📱 🔀</div>
+        <strong>Please rotate your device</strong><br>
+        This configuration tool requires landscape mode for the best drag-and-drop experience.
+    </div>
     <h2>ICDM-RX/MOD Setup Configurator</h2>
 
     <div class="container">
@@ -144,19 +176,12 @@
             <h3>Controllers</h3>
             <div class="draggable" draggable="true" id="tcp_master">Modbus/TCP Master</div>
             <div class="draggable" draggable="true" id="tcp_slave">Modbus/TCP Slave</div>
-			<div class="draggable" draggable="true" id="ethernet_master">Ethernet TCP/IP Master</div>
-			<div class="draggable" draggable="true" id="serial_master">Modbus RTU/ASCII Master</div>
-			<div class="draggable" draggable="true" id="serial_slave">Modbus RTU/ASCII Slave</div>
-			<div class="draggable" draggable="true" id="modbus_over_ethernet_master">Modbus over Ethernet TCP/IP Master</div>
-			<div class="draggable" draggable="true" id="tcp_master_slave">Modbus/TCP Master/Slave</div>
-			<div class="draggable" draggable="true" id="raw_ascii_tcp_controller">Raw/ASCII over Ethernet TCP/IP</div>
-
-            <br>
-            <h3>Devices</h3>
-            <div class="draggable" draggable="true" id="rtu_slave">Modbus/RTU</div>
-            <div class="draggable" draggable="true" id="ascii_slave">Modbus/ASCII</div>
-            <div class="draggable" draggable="true" id="raw_ascii_serial">Serial Raw/ASCII</div>
-            <div class="draggable" draggable="true" id="raw_ascii_ethernet">Ethernet TCP/IP Raw/ASCII</div>
+            <div class="draggable" draggable="true" id="ethernet_master">Ethernet TCP/IP Master</div>
+            <div class="draggable" draggable="true" id="serial_master">Modbus RTU/ASCII Master</div>
+            <div class="draggable" draggable="true" id="serial_slave">Modbus RTU/ASCII Slave</div>
+            <div class="draggable" draggable="true" id="modbus_over_ethernet_master">Modbus over Ethernet TCP/IP Master</div>
+            <div class="draggable" draggable="true" id="tcp_master_slave">Modbus/TCP Master/Slave</div>
+            <div class="draggable" draggable="true" id="raw_ascii_tcp_controller">Raw/ASCII over Ethernet TCP/IP</div>
         </div>
 
         <div class="workspace">
@@ -167,35 +192,8 @@
             <div class="dropzone" id="zone_2" data-type="node">
                 Drop Second Device Here
             </div>
-			
-			<!--<div style="text-align: left; margin-bottom: 20px;">
-                <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: block; margin-bottom: 10px;">
-                    <input type="checkbox" id="diff_subnet" onchange="checkCombination()">
-                    Masters are on different Ethernet subnets
-                </label>
-                <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: block; margin-bottom: 10px;">
-                    <input type="checkbox" id="multi_master" onchange="checkCombination()">
-                    One Master to Multiple Masters
-                <div style="margin-bottom: 10px;">
-                    <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
-                        <input type="checkbox" id="private_bus" onchange="checkCombination()">
-                        Enable Private Serial Bus 
-						<span class="tooltip-bubble">
-                            <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
-                                <li style="margin-bottom: 8px;">Contains both a Modbus master and one or more Modbus slaves on the same serial bus.</li>
-                                <li style="margin-bottom: 8px;">Allows only the Modbus master the ability to communicate directly to the Modbus slaves.</li>
-                                <li>May provide access from the Modbus master to public Modbus network(s) via an advanced gateway, such as the ICDM-RX/MOD running Modbus Router firmware.</li>
-                            </ul>
-                        </span>                    </label>
-                </div>
-                <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: block;">
-                    <input type="checkbox" id="remote_devices" onchange="checkCombination()">
-                    Devices are remotely located over Ethernet
-                </label>
-            </div>--->
-			
-			<div style="text-align: left; margin-bottom: 20px;">
-                
+            
+            <div style="text-align: left; margin-bottom: 20px;">
                 <div style="margin-bottom: 12px;">
                     <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
                         <input type="checkbox" id="diff_subnet" onchange="checkCombination()">
@@ -230,10 +228,10 @@
                         Devices are remotely located over Ethernet
                     </label>
                 </div>
-				
-				<div style="margin-bottom: 12px;">
+                
+                <div style="margin-bottom: 12px;">
                     <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
-                        <input type="checkbox" id="read_only" onchange="checkCombination()">
+                        <input type="checkbox" id="read_only" onchange="toggleReadOnly(); checkCombination()">
                         Enable Read Only Modbus Protection
                         <span class="tooltip-bubble">
                             <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
@@ -242,12 +240,63 @@
                             </ul>
                         </span>
                     </label>
+
+                    <div id="read_only_options" style="display: none; padding-left: 25px; margin-top: 10px; font-size: 14px; color: #444;">
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="ro_type" id="ro_5_1" value="5.1" checked onchange="checkCombination()">
+                            Standard per-port Read-Only configuration (Section 5.1)
+                        </label>
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="ro_type" id="ro_5_2_2" value="5.2.2" onchange="checkCombination()">
+                            RO & RW support over Dual Serial Port Device (Section 5.2.2)
+                        </label>
+                        <label style="display: block; cursor: pointer;">
+                            <input type="radio" name="ro_type" id="ro_5_2_3" value="5.2.3" onchange="checkCombination()">
+                            RO & RW support over Serial + Ethernet Device (Section 5.2.3)
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="id_conflicts" onchange="toggleIdConflicts(); checkCombination()">
+                        Resolve Modbus Device ID Conflicts (Section 6.5)
+                        <span class="tooltip-bubble">
+                            <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
+                                <li style="margin-bottom: 8px;">Uses Alias Device ID and Device ID Offset to solve routing issues.</li>
+                                <li>Effectively reassigns IDs without modifying controller logic or slave configurations.</li>
+                            </ul>
+                        </span>
+                    </label>
+
+                    <div id="id_conflicts_options" style="display: none; padding-left: 25px; margin-top: 10px; font-size: 14px; color: #444;">
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_1" value="6.5.1" checked onchange="checkCombination()">
+                            Modbus/TCP Master to Local Devices (Section 6.5.1)
+                        </label>
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_2" value="6.5.2" onchange="checkCombination()">
+                            Serial Master to Local & Remote Devices (Section 6.5.2)
+                        </label>
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_3" value="6.5.3" onchange="checkCombination()">
+                            Serial Master to Two Remote Raw/ASCII Devices (Section 6.5.3)
+                        </label>
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_4" value="6.5.4" onchange="checkCombination()">
+                            Merging Two Serial Modbus Networks (Section 6.5.4)
+                        </label>
+                        <label style="display: block; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_5" value="6.5.5" onchange="checkCombination()">
+                            Modbus Connectivity between Separate Ethernet Networks (Section 6.5.5)
+                        </label>
+                    </div>
                 </div>
             </div>
             
             <button class="btn-reset" onclick="resetWorkspace()">Reset Setup</button>
 
-			<div class="result-panel" id="result_panel">
+            <div class="result-panel" id="result_panel">
                 <h3 style="margin-top:0;">Configuration Required:</h3>
                 <p style="margin-bottom: 5px;"><strong>Recommended Firmware:</strong> <span id="out_firmware"></span></p>
                 <p id="inline_alt_firmware_container" style="display:none; margin-top: 0px; margin-bottom: 15px; color: #555;">
@@ -255,13 +304,21 @@
                 </p>
                 <p><strong>Manual Reference:</strong> <span id="out_section"></span></p>
                 <img id="out_image" src="" alt="Setup Diagram" style="display:none; margin-bottom: 20px;">
-				
+                
                 <div id="alt_firmware_container" style="display:none; margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ccc;">
                     <p><strong>Alternate Firmware:</strong> <span id="out_alt_firmware"></span></p>
                     <p id="alt_section_container" style="display:none;"><strong>Alternate Reference:</strong> <span id="out_alt_section"></span></p>
                     <img id="out_image_alt" src="" alt="Alternate Setup Diagram" style="display:none;">
                 </div>
             </div>
+        </div>
+
+        <div class="palette">
+            <h3>Devices</h3>
+            <div class="draggable" draggable="true" id="rtu_slave">Modbus/RTU</div>
+            <div class="draggable" draggable="true" id="ascii_slave">Modbus/ASCII</div>
+            <div class="draggable" draggable="true" id="raw_ascii_serial">Serial Raw/ASCII</div>
+            <div class="draggable" draggable="true" id="raw_ascii_ethernet">Ethernet TCP/IP Raw/ASCII</div>
         </div>
     </div>
 
@@ -502,7 +559,18 @@
                 checkCombination();
             });
         });
-
+		
+		function toggleReadOnly() {
+            const roOptions = document.getElementById('read_only_options');
+            const isReadOnly = document.getElementById('read_only').checked;
+            roOptions.style.display = isReadOnly ? "block" : "none";
+        }
+		
+		function toggleIdConflicts() {
+            const idOptions = document.getElementById('id_conflicts_options');
+            const isIdConflicts = document.getElementById('id_conflicts').checked;
+            idOptions.style.display = isIdConflicts ? "block" : "none";
+        }
 		function checkCombination() {
             if (node1 && node2) {
                 // Check both order combinations so the user can drop in any order
@@ -519,9 +587,11 @@
                 const altContainer = document.getElementById('alt_firmware_container');
                 const isDiffSubnet = document.getElementById('diff_subnet') ? document.getElementById('diff_subnet').checked : false;
                 const isMultiMaster = document.getElementById('multi_master') ? document.getElementById('multi_master').checked : false;
-				const isPrivateBus = document.getElementById('private_bus') ? document.getElementById('private_bus').checked : false; // Read new checkbox
-				const isRemote = document.getElementById('remote_devices') ? document.getElementById('remote_devices').checked : false; // Read new checkbox
-				const isReadOnly = document.getElementById('read_only') ? document.getElementById('read_only').checked : false; // Read new checkbox
+				const isPrivateBus = document.getElementById('private_bus') ? document.getElementById('private_bus').checked : false; 
+				const isRemote = document.getElementById('remote_devices') ? document.getElementById('remote_devices').checked : false; 
+				const isReadOnly = document.getElementById('read_only') ? document.getElementById('read_only').checked : false; 
+				const isIdOffset = document.getElementById('id_offset') ? document.getElementById('id_offset').checked : false; 
+				const isIdConflicts = document.getElementById('id_conflicts') ? document.getElementById('id_conflicts').checked : false;
 				
                 if (result) {
                     let finalFirmware = result.firmware;
@@ -617,17 +687,37 @@
                             finalAltImage = null;
                         }
                     }
-					// SECTION 5.1 OVERRIDE LOGIC
+					
+// SECTION 5.1, 5.2.2, & 5.2.3 OVERRIDE LOGIC
                     if (isReadOnly) {
                         // The Read-Only feature is exclusively available on Modbus Router firmware
-                        // We check if the base topology's recommended OR alternate firmware uses it
                         if (finalFirmware.includes("Modbus Router") || (finalAltFirmware && finalAltFirmware.includes("Modbus Router"))) {
-                            finalFirmware = "Modbus Router";
-                            finalSection = "Section 5.1 - Implementing the Disable Writes (Read Only) Option";
-                            finalImage = "images/section_5_1.png"; // Save the image from page 48 here
+                            
+                            // Check which radio button is selected
+                            const roType = document.querySelector('input[name="ro_type"]:checked').value;
+                            
+                            if (roType === "5.2.2") {
+                                // Layout for Section 5.2.2
+                                finalFirmware = "Modbus Router (Requires 2 Gateways)";
+                                finalSection = "Section 5.2.2 - Accessing Read-Only and Read/Write Devices that have Two Serial Ports";
+                                finalImage = "images/section_5_2_2.png";
+                            } else if (roType === "5.2.3") {
+                                // Layout for Section 5.2.3
+                                finalFirmware = "Modbus Router (1 Gateway + Direct Ethernet Connection)";
+                                finalSection = "Section 5.2.3 - Accessing Read-Only and Read/Write Devices that have One Serial Port and One Ethernet Port";
+                                finalImage = "images/section_5_2_3.png";
+                            } else {
+                                // Default Primary Layout: Section 5.1
+                                finalFirmware = "Modbus Router";
+                                finalSection = "Section 5.1 - Implementing the Disable Writes (Read Only) Option";
+                                finalImage = "images/section_5_1.png";
+                            }
+                            
+                            // Clear alternate layouts for these overrides
                             finalAltFirmware = null;
                             finalAltSection = null;
                             finalAltImage = null;
+                            
                         } else {
                             finalFirmware = "N/A";
                             finalSection = "Invalid: The Read-Only security feature is exclusively supported by the Modbus Router firmware. It cannot be used with topologies that strictly require Modbus/TCP firmware.";
@@ -637,7 +727,89 @@
                             finalAltImage = null;
                         }
                     }
-                    // Populate Primary Layout
+					// SECTION 6.5.1 OVERRIDE LOGIC
+                    if (isIdOffset) {
+                        // Section 6.5.1 strictly applies to Modbus/TCP Masters querying local serial slaves
+                        if (comboKey.startsWith("tcp_master_") && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave"))) {
+                            finalFirmware = "Modbus Router";
+                            finalSection = "Section 6.5.1 - Modbus/TCP Master Communicating to Local Device(s) with Same Device ID";
+                            finalImage = "images/section_6_5_1.png"; // Save the image from page 58 here
+                            
+                            // Clear alternate layouts
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A";
+                            finalSection = "Invalid: Section 6.5.1 specifically covers a Modbus/TCP Master communicating with local serial slaves that share identical Device IDs. This requires the Device ID Offset functionality exclusive to the Modbus Router firmware.";
+                            finalImage = "";
+                            finalAltFirmware = null;
+                            finalAltSection = null;
+                            finalAltImage = null;
+                        }
+                    }
+					// SECTION 6.5 OVERRIDE LOGIC
+					if (isIdConflicts) {
+						const idType = document.querySelector('input[name="id_type"]:checked').value;
+                    
+						if (idType === "6.5.1") {
+							if (comboKey.startsWith("tcp_master_") && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave"))) {
+								finalFirmware = "Modbus Router";
+								finalSection = "Section 6.5.1 - Modbus/TCP Master Communicating to Local Device(s) with Same Device ID";
+								finalImage = "images/section_6_5_1.png";
+								finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							} else {
+								finalFirmware = "N/A";
+								finalSection = "Invalid: Section 6.5.1 specifically covers a Modbus/TCP Master communicating with local serial slaves.";
+								finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							}
+						} else if (idType === "6.5.2") {
+							if (comboKey.startsWith("serial_master_") && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave"))) {
+								finalFirmware = "Modbus Router (Requires 2 Gateways)";
+								finalSection = "Section 6.5.2 - Modbus Serial Master Communicating to Local and Remote Devices with Same Device IDs";
+								finalImage = "images/section_6_5_2.png";
+								finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							} else {
+								finalFirmware = "N/A";
+								finalSection = "Invalid: Section 6.5.2 specifically covers a Modbus Serial Master communicating with serial slaves.";
+								finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							}
+						} else if (idType === "6.5.3") {
+							if (comboKey.startsWith("serial_master_") && comboKey.includes("raw_ascii_serial")) {
+								finalFirmware = "Modbus Router (Requires 3 Gateways)";
+								finalSection = "Section 6.5.3 - Modbus Serial Master Communicating to Two Remote Serial Raw/ASCII Devices";
+								finalImage = "images/section_6_5_3.png";
+								finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							} else {
+								finalFirmware = "N/A";
+								finalSection = "Invalid: Section 6.5.3 covers a Modbus Serial Master communicating with remote Serial Raw/ASCII Devices.";
+								finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							}
+						} else if (idType === "6.5.4") {
+							if (comboKey.startsWith("serial_master_") && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave"))) {
+								finalFirmware = "Modbus Router (Requires 2 Gateways)";
+								finalSection = "Section 6.5.4 - Merging Two Serial Modbus Networks";
+								finalImage = "images/section_6_5_4.png";
+								finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							} else {
+								finalFirmware = "N/A";
+								finalSection = "Invalid: Section 6.5.4 covers Serial Modbus Masters merging with Serial Modbus Slaves.";
+								finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							}
+						} else if (idType === "6.5.5") {
+							if ((comboKey.startsWith("tcp_master_") || comboKey.startsWith("ethernet_master_") || comboKey.startsWith("modbus_over_ethernet_master_")) && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave") || comboKey.includes("tcp_slave"))) {
+								finalFirmware = "Modbus Router (Requires 2 or more Gateways)";
+								finalSection = "Section 6.5.5 - Providing Modbus Connectivity between Separate Ethernet Networks";
+								finalImage = "images/section_6_5_5.png";
+								finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							} else {
+								finalFirmware = "N/A";
+								finalSection = "Invalid: Section 6.5.5 covers Ethernet-based controllers connecting to remote Modbus slaves over separate networks.";
+								finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+							}
+						}
+					}
+					// Populate Primary Layout
                     document.getElementById('out_firmware').innerText = finalFirmware;
                     document.getElementById('out_section').innerText = finalSection;
                     
@@ -724,6 +896,12 @@
 			if(document.getElementById('private_bus')) document.getElementById('private_bus').checked = false;
 			if(document.getElementById('remote_devices')) document.getElementById('remote_devices').checked = false;
 			if(document.getElementById('read_only')) document.getElementById('read_only').checked = false;
+			if(document.getElementById('read_only_options')) document.getElementById('read_only_options').style.display = "none";
+            if(document.getElementById('ro_5_1')) document.getElementById('ro_5_1').checked = true;
+			if(document.getElementById('id_offset')) document.getElementById('id_offset').checked = false;
+			if(document.getElementById('id_conflicts')) document.getElementById('id_conflicts').checked = false;
+            if(document.getElementById('id_conflicts_options')) document.getElementById('id_conflicts_options').style.display = "none";
+            if(document.getElementById('id_6_5_1')) document.getElementById('id_6_5_1').checked = true;
             document.getElementById('result_panel').style.display = "none";
         }
     </script>
