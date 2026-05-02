@@ -161,6 +161,14 @@
                 display: none; /* Hide the app to avoid messy rendering */
             }
         }
+		/* Disabled Palette Items */
+        .draggable.disabled {
+            opacity: 0.4;
+            pointer-events: none; /* Prevents hovering, clicking, and dragging */
+            background: #f5f5f5;
+            border-color: #ddd;
+            color: #999;
+        }
     </style>
 </head>
 <body>
@@ -559,6 +567,7 @@
                 if(zone.id === "zone_2") node2 = draggedId;
 
                 checkCombination();
+				updatePaletteState();
             });
         });
 		
@@ -572,6 +581,41 @@
             const idOptions = document.getElementById('id_conflicts_options');
             const isIdConflicts = document.getElementById('id_conflicts').checked;
             idOptions.style.display = isIdConflicts ? "block" : "none";
+        }
+		function updatePaletteState() {
+            const draggables = document.querySelectorAll('.palette .draggable');
+
+            // If the workspace is completely empty, OR if both slots are full 
+            // (so the user can freely drag a new device to replace either side), enable everything.
+            if ((!node1 && !node2) || (node1 && node2)) {
+                draggables.forEach(d => {
+                    d.classList.remove('disabled');
+                    d.setAttribute('draggable', 'true');
+                });
+                return;
+            }
+
+            // If exactly one slot is filled, find out which device it is
+            const activeNode = node1 ? node1 : node2;
+
+            // Check every item in the palette against the active device
+            draggables.forEach(d => {
+                const targetId = d.id;
+                
+                // Check if the combination exists in solutionDB (in either drop order)
+                const combo1 = `${activeNode}_${targetId}`;
+                const combo2 = `${targetId}_${activeNode}`;
+                
+                if (solutionDB[combo1] || solutionDB[combo2]) {
+                    // It's a valid match -> Keep it enabled
+                    d.classList.remove('disabled');
+                    d.setAttribute('draggable', 'true');
+                } else {
+                    // No valid combination found -> Disable it
+                    d.classList.add('disabled');
+                    d.setAttribute('draggable', 'false');
+                }
+            });
         }
 		function checkCombination() {
             if (node1 && node2) {
@@ -905,6 +949,8 @@
             if(document.getElementById('id_conflicts_options')) document.getElementById('id_conflicts_options').style.display = "none";
             if(document.getElementById('id_6_5_1')) document.getElementById('id_6_5_1').checked = true;
             document.getElementById('result_panel').style.display = "none";
+			
+			updatePaletteState();
         }
     </script>
 </body>
