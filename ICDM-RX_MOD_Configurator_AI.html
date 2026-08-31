@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICDM-RX/MOD Setup Configurator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 { text-align: center; color: #005A9C; }
+        
+		/* Main Grid Layout */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-rows: auto auto; /* Row 1: AI, Row 2: Main App */
+            gap: 20px;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+
+        /* AI Section Styles */
+        .ai-section {
+            grid-column: 1 / 3; /* Spans Controllers and Workspace */
+            grid-row: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #ai_input {
+            width: 100%;
+            background-color: #000;
+            color: #fff;
+            border: 2px solid #005A9C;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 15px;
+            resize: vertical;
+            min-height: 60px;
+			box-sizing: border-box;
+        }
+        #ai_input::placeholder {
+            color: #666;
+        }
+		.ai-button-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-query {
+            background-color: #00a884;
+            color: white;
+            border: none;
+            padding: 10px 35px;
+            font-size: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-query:hover { background-color: #008f6f; }
+        .ai-response {
+		    grid-column: 3; /* Aligns with Devices */
+            grid-row: 1;
+
+            display: none;
+            background: #e0f2f1;
+            border-left: 5px solid #00a884;
+            padding: 15px;
+            border-radius: 4px;
+            color: #004d40;
+            font-size: 14px;
+            line-height: 1.5;
+			max-height: 130px; /* Enables scrolling if text is too long */
+            overflow-y: auto;
+            box-sizing: border-box;
+            margin: 0;
+
+        }
+
+        /* Draggable Palette Items */
+        .palette {
+
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .palette-left { grid-column: 1; grid-row: 2; }
+        .palette-right { grid-column: 3; grid-row: 2; }
+
+
+        .palette h3 { font-size: 16px; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 5px;}
+        .draggable {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            cursor: grab;
+            text-align: center;
+            font-weight: 500;
+        }
+        .draggable:active { cursor: grabbing; }
+        
+        /* Dropzone Workspace */
+        .workspace {
+            grid-column: 2;
+            grid-row: 2;
+
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .dropzone {
+            height: 80px;
+            background: #fafafa;
+            border: 2px dashed #b0bec5;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #78909c;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .dropzone.dragover { background: #e8f5e9; border-color: #4caf50; }
+        
+        /* Result Panel */
+        .result-panel {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            border-radius: 4px;
+        }
+        .result-panel img {
+            max-width: 100%;
+            border: 1px solid #ccc;
+            margin-top: 15px;
+            display: block;
+        }
+        .btn-reset {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        /* Tooltip Container */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip-container .tooltip-bubble {
+            visibility: hidden;
+            width: 280px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 100;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.4;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+        .tooltip-container .tooltip-bubble::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-bubble {
+            visibility: visible;
+            opacity: 1;
+        }
+        /* Mobile Rotation Overlay */
+        #rotate-message {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #005A9C;
+            color: white;
+            z-index: 9999;
+            text-align: center;
+            padding-top: 35vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        @media only screen and (max-width: 768px) and (orientation: portrait) {
+            #rotate-message { display: block; }
+            body { overflow: hidden; }
+            .container, h2 { display: none; }
+
+        }
+        /* Disabled Palette Items */
+        .draggable.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            background: #f5f5f5;
+            border-color: #ddd;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div id="rotate-message">
+        <div style="font-size: 50px; margin-bottom: 20px;">📱 🔀</div>
+        <strong>Please rotate your device</strong><br>
+        This configuration tool requires landscape mode for the best drag-and-drop experience.
+    </div>
+    
+    <h2>ICDM-RX/MOD Setup Configurator</h2>
+
+    <div class="container">
+        
+        <!-- Row 1: AI Query Section (Spans Left & Center) -->
+        <div class="ai-section">
+            <textarea id="ai_input" placeholder="Describe your setup or upload a diagram (e.g., 'I need to resolve a device ID conflict between my Modbus TCP Master and an RTU slave.')"></textarea>
+            
+            <div class="ai-button-row">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <input type="file" id="ai_image" accept="image/png, image/jpeg, image/webp" style="display: none;" onchange="document.getElementById('file_name').innerText = this.files[0] ? this.files[0].name : '';">
+                    <button onclick="document.getElementById('ai_image').click()" style="background: #333; color: #fff; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 14px;">📎 Attach Diagram</button>
+                    <span id="file_name" style="color: #555; font-size: 14px; font-weight: 500;"></span>
+                </div>
+                <button class="btn-query" onclick="queryAI()">Query AI</button>
+            </div>
+        </div>
+
+        <!-- Row 1: AI Response Section (Right column) -->
+        <div class="ai-response" id="ai_response"></div>
+        
+        <!-- Row 2: Left Panel (Controllers) -->
+        <div class="palette palette-left">
+            <h3>Controllers</h3>
+            <div class="draggable" draggable="true" id="tcp_master">Modbus/TCP Master</div>
+            <div class="draggable" draggable="true" id="tcp_slave">Modbus/TCP Slave</div>
+            <div class="draggable" draggable="true" id="ethernet_master">Ethernet TCP/IP Master</div>
+            <div class="draggable" draggable="true" id="serial_master">Modbus RTU/ASCII Master</div>
+            <div class="draggable" draggable="true" id="serial_slave">Modbus RTU/ASCII Slave</div>
+            <div class="draggable" draggable="true" id="modbus_over_ethernet_master">Modbus over Ethernet TCP/IP Master</div>
+            <div class="draggable" draggable="true" id="tcp_master_slave">Modbus/TCP Master/Slave</div>
+            <div class="draggable" draggable="true" id="raw_ascii_tcp_controller">Raw/ASCII over Ethernet TCP/IP</div>
+        </div>
+
+        <!-- Row 2: Center Panel (Workspace) -->
+
+        <div class="workspace">
+            <h3>Build Your Setup</h3>
+            <div class="dropzone" id="zone_1" data-type="node">
+                Drop First Device Here
+            </div>
+            <div class="dropzone" id="zone_2" data-type="node">
+                Drop Second Device Here
+            </div>
+            
+            <div style="text-align: left; margin-bottom: 20px;">
+                <div style="margin-bottom: 12px;">
+                    <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="diff_subnet" onchange="checkCombination()">
+                        Masters are on different Ethernet subnets
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="multi_master" onchange="checkCombination()">
+                        One Master to Multiple Masters
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="private_bus" onchange="checkCombination()">
+                        Enable Private Serial Bus
+                        <span class="tooltip-bubble">
+                            <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
+                                <li style="margin-bottom: 8px;">Contains both a Modbus master and one or more Modbus slaves on the same serial bus.</li>
+                                <li style="margin-bottom: 8px;">Allows only the Modbus master the ability to communicate directly to the Modbus slaves.</li>
+                                <li>May provide access from the Modbus master to public Modbus network(s) via an advanced gateway.</li>
+                            </ul>
+                        </span>
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="remote_devices" onchange="checkCombination()">
+                        Devices are remotely located over Ethernet
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="read_only" onchange="toggleReadOnly(); checkCombination()">
+                        Enable Read Only Modbus Protection
+                        <span class="tooltip-bubble">
+                            <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
+                                <li style="margin-bottom: 8px;">Blocks all standard Modbus write messages from being transmitted out a serial port.</li>
+                                <li>Allows monitoring systems to retrieve data while preventing unauthorized or errant changes.</li>
+                            </ul>
+                        </span>
+                    </label>
+
+                    <div id="read_only_options" style="display: none; padding-left: 25px; margin-top: 10px; font-size: 14px; color: #444;">
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="ro_type" id="ro_5_1" value="5.1" checked onchange="checkCombination()">
+                            Standard per-port Read-Only configuration (Section 5.1)
+                        </label>
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="ro_type" id="ro_5_2_2" value="5.2.2" onchange="checkCombination()">
+                            RO & RW support over Dual Serial Port Device (Section 5.2.2)
+                        </label>
+                        <label style="display: block; cursor: pointer;">
+                            <input type="radio" name="ro_type" id="ro_5_2_3" value="5.2.3" onchange="checkCombination()">
+                            RO & RW support over Serial + Ethernet Device (Section 5.2.3)
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label class="tooltip-container" style="cursor: pointer; font-weight: 500; color: #005A9C; display: inline-block;">
+                        <input type="checkbox" id="id_conflicts" onchange="toggleIdConflicts(); checkCombination()">
+                        Resolve Modbus Device ID Conflicts (Section 6.5)
+                        <span class="tooltip-bubble">
+                            <ul style="text-align: left; padding-left: 20px; margin: 5px 0;">
+                                <li style="margin-bottom: 8px;">Uses Alias Device ID and Device ID Offset to solve routing issues.</li>
+                                <li>Effectively reassigns IDs without modifying controller logic or slave configurations.</li>
+                            </ul>
+                        </span>
+                    </label>
+
+                    <div id="id_conflicts_options" style="display: none; padding-left: 25px; margin-top: 10px; font-size: 14px; color: #444;">
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_1" value="6.5.1" checked onchange="checkCombination()">
+                            Modbus/TCP Master to Local Devices (Section 6.5.1)
+                        </label>
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_2" value="6.5.2" onchange="checkCombination()">
+                            Serial Master to Local & Remote Devices (Section 6.5.2)
+                        </label>
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_3" value="6.5.3" onchange="checkCombination()">
+                            Serial Master to Two Remote Raw/ASCII Devices (Section 6.5.3)
+                        </label>
+                        <label style="display: block; margin-bottom: 6px; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_4" value="6.5.4" onchange="checkCombination()">
+                            Merging Two Serial Modbus Networks (Section 6.5.4)
+                        </label>
+                        <label style="display: block; cursor: pointer;">
+                            <input type="radio" name="id_type" id="id_6_5_5" value="6.5.5" onchange="checkCombination()">
+                            Modbus Connectivity between Separate Ethernet Networks (Section 6.5.5)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn-reset" onclick="resetWorkspace(true)">Reset Setup</button>
+
+            <div class="result-panel" id="result_panel">
+                <h3 style="margin-top:0;">Configuration Required:</h3>
+                <p style="margin-bottom: 5px;"><strong>Recommended Firmware:</strong> <span id="out_firmware"></span></p>
+                <p id="inline_alt_firmware_container" style="display:none; margin-top: 0px; margin-bottom: 15px; color: #555;">
+                    <strong>Alternate Firmware:</strong> <span id="out_inline_alt_firmware"></span>
+                </p>
+                <p><strong>Manual Reference:</strong> <span id="out_section"></span></p>
+                
+                <img id="out_image" src="" alt="Setup Diagram" style="display:none; margin-bottom: 20px; cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Click to view full size">
+                
+                <div id="alt_firmware_container" style="display:none; margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ccc;">
+                    <p><strong>Alternate Firmware:</strong> <span id="out_alt_firmware"></span></p>
+                    <p id="alt_section_container" style="display:none;"><strong>Alternate Reference:</strong> <span id="out_alt_section"></span></p>
+                    
+                    <img id="out_image_alt" src="" alt="Alternate Setup Diagram" style="display:none; cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Click to view full size">
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Right Panel (Devices) -->
+        <div class="palette palette-right">
+            <h3>Devices</h3>
+            <div class="draggable" draggable="true" id="rtu_slave">Modbus/RTU</div>
+            <div class="draggable" draggable="true" id="ascii_slave">Modbus/ASCII</div>
+            <div class="draggable" draggable="true" id="raw_ascii_serial">Serial Raw/ASCII</div>
+            <div class="draggable" draggable="true" id="raw_ascii_ethernet">Ethernet TCP/IP Raw/ASCII</div>
+        </div>
+    </div>
+
+<script>
+        // Database of combinations mapped from the manual
+        const solutionDB = {
+            "tcp_master_rtu_slave": { firmware: "Modbus Router", altFirmware: "Modbus/TCP", section: "Section 2.1.1 - Serial Modbus/RTU Slave(s)", imagePath: "images/section_2_1_1.png" },
+            "tcp_master_ascii_slave": { firmware: "Modbus Router", altFirmware: "Modbus/TCP", section: "Section 2.1.2 - Serial Modbus/ASCII Slave(s)", imagePath: "images/section_2_1_2.png" },
+            "tcp_master_raw_ascii_serial": { firmware: "Modbus/TCP", section: "Section 2.1.3 - Serial Raw/ASCII Device(s)", imagePath: "images/section_2_1_3.png" },
+            "tcp_master_raw_ascii_ethernet": { firmware: "Modbus/TCP", section: "Section 2.1.4 - Ethernet Raw/ASCII Device(s)", imagePath: "images/section_2_1_4.png" },
+            "tcp_master_tcp_master": { firmware: "Modbus Router (Shared Memory)", section: "Section 3.1.1.1 - Two Modbus/TCP Masters", imagePath: "images/section_3_1_1_1.png", altFirmware: "Modbus/TCP (Queued Messages)", altSection: "Section 3.2.1.1.1 - Two Modbus/TCP Masters", altImagePath: "images/section_3_2_1_1_1.png" },
+            "tcp_master_ethernet_master": { firmware: "Modbus Router (Shared Memory)", section: "Section 3.1.1.1 - 2 Modbus/TCP Masters and/or Ethernet TCP/IP Masters", imagePath: "images/section_3_1_1_1.png" },
+            "ethernet_master_ethernet_master": { firmware: "Modbus Router (Shared Memory)", section: "Section 3.1.1.1 - 2 Modbus/TCP Masters and/or Ethernet TCP/IP Masters", imagePath: "images/section_3_1_1_1.png" },
+            "serial_master_serial_master": { firmware: "Modbus Router (Shared Memory)", section: "Section 3.1.1.2 - Two Serial Modbus Masters", imagePath: "images/section_3_1_1_2.png", altFirmware: "Modbus/TCP (Queued Messages)", altSection: "Section 3.2.1.1.2 - Two Serial Modbus Masters", altImagePath: "images/section_3_2_1_1_2.png" },
+            "tcp_master_serial_master": { firmware: "Modbus Router (Shared Memory)", section: "Section 3.1.2 - Modbus/TCP and Serial Modbus Masters", imagePath: "images/section_3_1_2.png", altFirmware: "Modbus/TCP (Queued Messages)", altSection: "Section 3.2.1.1.3 - Modbus/TCP and Serial Modbus Masters", altImagePath: "images/section_3_2_1_1_3.png" },
+            "ethernet_master_serial_master": { firmware: "Modbus Router (Shared Memory)", section: "Section 3.1.2 - Modbus/TCP, Ethernet TCP/IP and Serial Masters", imagePath: "images/section_3_1_2.png" },
+            "tcp_slave_raw_ascii_serial": { firmware: "Modbus/TCP", section: "Section 2.2.1 - Raw/ASCII Serial Device(s)", imagePath: "images/section_2_2_1.png" },
+            "tcp_slave_raw_ascii_ethernet": { firmware: "Modbus/TCP", section: "Section 2.2.2 - Raw/ASCII Ethernet Device(s)", imagePath: "images/section_2_2_2.png" },
+            "tcp_master_slave_raw_ascii_serial": { firmware: "Modbus/TCP", section: "Section 2.3.1 - Raw/ASCII Serial Device(s)", imagePath: "images/section_2_3_1.png" },
+            "tcp_master_slave_raw_ascii_ethernet": { firmware: "Modbus/TCP", section: "Section 2.3.2 - Raw/ASCII Ethernet Device(s)", imagePath: "images/section_2_3_2.png" },
+            "serial_master_rtu_slave": { firmware: "Modbus Router", altFirmware: "Modbus/TCP", section: "Section 2.4.1 - Serial Modbus/RTU Slave(s)", imagePath: "images/section_2_4_1.png" },
+            "serial_master_ascii_slave": { firmware: "Modbus Router", altFirmware: "Modbus/TCP", section: "Section 2.4.2 - Serial Modbus/ASCII Slave(s)", imagePath: "images/section_2_4_2.png" },
+            "serial_master_tcp_slave": { firmware: "Modbus Router", section: "Section 2.4.3 - Modbus/TCP Slaves", imagePath: "images/section_2_4_3.png" },
+            "serial_master_raw_ascii_serial": { firmware: "Modbus/TCP", section: "Section 2.4.4 - Serial Raw/ASCII Device(s)", imagePath: "images/section_2_4_4.png" },
+            "serial_master_raw_ascii_ethernet": { firmware: "Modbus/TCP", section: "Section 2.4.5 - Raw/ASCII Ethernet Device(s)", imagePath: "images/section_2_4_5.png" },
+            "serial_slave_raw_ascii_serial": { firmware: "Modbus/TCP", section: "Section 2.5.1 - Serial Raw/ASCII Device(s)", imagePath: "images/section_2_5_1.png" },
+            "serial_slave_raw_ascii_ethernet": { firmware: "Modbus/TCP", section: "Section 2.5.2 - Ethernet TCP/IP Raw/ASCII Device(s)", imagePath: "images/section_2_5_2.png" },
+            "modbus_over_ethernet_master_rtu_slave": { firmware: "Modbus Router", altFirmware: "Modbus/TCP", section: "Section 2.6.1 - Serial Modbus/RTU Slave(s)", imagePath: "images/section_2_6_1.png" },
+            "modbus_over_ethernet_master_ascii_slave": { firmware: "Modbus Router", altFirmware: "Modbus/TCP", section: "Section 2.6.2 - Serial Modbus/ASCII Slave(s)", imagePath: "images/section_2_6_2.png" },
+            "modbus_over_ethernet_master_tcp_slave": { firmware: "Modbus Router", section: "Section 2.6.3 - Modbus/TCP Slaves", imagePath: "images/section_2_6_3.png" },
+            "raw_ascii_tcp_controller_raw_ascii_serial": { firmware: "Modbus/TCP", section: "Section 2.7.1 - Serial Raw/ASCII Device(s)", imagePath: "images/section_2_7_1.png" },
+            "raw_ascii_tcp_controller_raw_ascii_ethernet": { firmware: "Modbus/TCP", section: "Section 2.7.2 - Ethernet TCP/IP Raw/ASCII Device(s)", imagePath: "images/section_2_7_2.png" },
+            "tcp_slave_tcp_slave": { firmware: "Modbus/TCP", section: "Section 3.2.2.1 - Modbus/TCP Slave-to-Slave Connectivity", imagePath: "images/section_3_2_2_1.png" },
+            "tcp_slave_serial_slave": { firmware: "Modbus/TCP", section: "Section 3.2.2.2 - Modbus/TCP Slave to Serial Modbus Slave", imagePath: "images/section_3_2_2_2.png" },
+            "serial_slave_serial_slave": { firmware: "Modbus/TCP", section: "Section 3.2.2.1.1 - Two Modbus Serial Modbus Slaves", imagePath: "images/section_3_2_2_1_1.png" }
+        };
+
+        let node1 = null;
+        let node2 = null;
+
+        const draggables = document.querySelectorAll('.draggable');
+        const dropzones = document.querySelectorAll('.dropzone');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', e.target.id); });
+        });
+
+        dropzones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', () => { zone.classList.remove('dragover'); });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                
+                const draggedId = e.dataTransfer.getData('text/plain');
+                const draggedElement = document.getElementById(draggedId);
+                
+                zone.innerText = draggedElement.innerText;
+                zone.style.background = "#e3f2fd";
+                zone.style.border = "2px solid #2196f3";
+                zone.style.color = "#000";
+
+                if(zone.id === "zone_1") node1 = draggedId;
+                if(zone.id === "zone_2") node2 = draggedId;
+
+                checkCombination();
+                updatePaletteState();
+            });
+        });
+        
+        function toggleReadOnly() {
+            const roOptions = document.getElementById('read_only_options');
+            roOptions.style.display = document.getElementById('read_only').checked ? "block" : "none";
+        }
+        
+        function toggleIdConflicts() {
+            const idOptions = document.getElementById('id_conflicts_options');
+            idOptions.style.display = document.getElementById('id_conflicts').checked ? "block" : "none";
+        }
+
+        function updatePaletteState() {
+            const draggables = document.querySelectorAll('.palette .draggable');
+            if ((!node1 && !node2) || (node1 && node2)) {
+                draggables.forEach(d => { d.classList.remove('disabled'); d.setAttribute('draggable', 'true'); });
+                return;
+            }
+            const activeNode = node1 ? node1 : node2;
+            draggables.forEach(d => {
+                const targetId = d.id;
+                if (solutionDB[`${activeNode}_${targetId}`] || solutionDB[`${targetId}_${activeNode}`]) {
+                    d.classList.remove('disabled');
+                    d.setAttribute('draggable', 'true');
+                } else {
+                    d.classList.add('disabled');
+                    d.setAttribute('draggable', 'false');
+                }
+            });
+        }
+
+        function checkCombination() {
+            if (node1 && node2) {
+                let comboKey = `${node1}_${node2}`;
+                let result = solutionDB[comboKey];
+                if (!result) { comboKey = `${node2}_${node1}`; result = solutionDB[comboKey]; }
+
+                const panel = document.getElementById('result_panel');
+                const altContainer = document.getElementById('alt_firmware_container');
+                const isDiffSubnet = document.getElementById('diff_subnet') ? document.getElementById('diff_subnet').checked : false;
+                const isMultiMaster = document.getElementById('multi_master') ? document.getElementById('multi_master').checked : false;
+                const isPrivateBus = document.getElementById('private_bus') ? document.getElementById('private_bus').checked : false; 
+                const isRemote = document.getElementById('remote_devices') ? document.getElementById('remote_devices').checked : false; 
+                const isReadOnly = document.getElementById('read_only') ? document.getElementById('read_only').checked : false; 
+                const isIdConflicts = document.getElementById('id_conflicts') ? document.getElementById('id_conflicts').checked : false;
+                
+                if (result) {
+                    let finalFirmware = result.firmware;
+                    let finalSection = result.section;
+                    let finalImage = result.imagePath;
+                    let finalAltFirmware = result.altFirmware;
+                    let finalAltSection = result.altSection;
+                    let finalAltImage = result.altImagePath;
+
+                    // OVERRIDE LOGIC BLOCKS
+                    if (isRemote) {
+                        if (comboKey === "serial_master_rtu_slave") {
+                            finalFirmware = "Modbus Router (Both Gateways)"; finalAltFirmware = "Modbus Router (Master Gateway) & Modbus/TCP (Remote Gateway)"; finalSection = "Section 2.4.6 - Remote Serial Modbus/RTU Slave(s) (Requires 2 Gateways)"; finalImage = "images/section_2_4_6.png"; finalAltSection = null; finalAltImage = null;
+                        } else if (comboKey === "serial_master_ascii_slave") {
+                            finalFirmware = "Modbus Router (Both Gateways)"; finalAltFirmware = "Modbus Router (Master Gateway) & Modbus/TCP (Remote Gateway)"; finalSection = "Section 2.4.7 - Remote Serial Modbus/ASCII Slave(s) (Requires 2 Gateways)"; finalImage = "images/section_2_4_7.png"; finalAltSection = null; finalAltImage = null;
+                        } else if (comboKey === "serial_master_raw_ascii_serial") {
+                            finalFirmware = "Modbus Router (Master Gateway) & Modbus/TCP (Remote Gateway)"; finalSection = "Section 2.4.8 - Remote Raw/ASCII Serial Device(s)"; finalImage = "images/section_2_4_8.png"; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        } else if (comboKey === "serial_slave_raw_ascii_serial") {
+                            finalFirmware = "Modbus/TCP (Both Gateways)"; finalSection = "Section 2.5.3 - Remote Raw/ASCII Serial Device(s)"; finalImage = "images/section_2_5_3.png"; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A"; finalSection = "Invalid: Remote Ethernet configurations only apply to specific Serial setups."; finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        }
+                    }                    
+                    if (isDiffSubnet && (comboKey === "tcp_master_tcp_master" || comboKey === "tcp_master_ethernet_master" || comboKey === "ethernet_master_ethernet_master")) {
+                        finalFirmware = "Modbus Router (Shared Memory)"; finalSection = "Section 3.1.3 - Masters on Different Ethernet Subnets"; finalImage = "images/section_3_1_3.png"; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                    }
+                    if (isMultiMaster) {
+                        if (comboKey === "tcp_master_tcp_master" || comboKey === "serial_master_serial_master" || comboKey === "tcp_master_serial_master") {
+                            finalFirmware = "Modbus/TCP (Queued Messages)"; finalSection = "Section 3.2.1.2 - One Modbus Master to Multiple Modbus Masters"; finalImage = "images/section_3_2_1_2.png"; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A"; finalSection = "Invalid: Section 3.2.1.2 only supports Modbus/TCP and Serial Modbus Masters."; finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        }
+                    }
+                    if (isPrivateBus) {
+                        if (comboKey.includes("serial_master")) {
+                            finalFirmware = "Modbus Router"; finalSection = "Section 4.2.1 - Private Serial Bus Capabilities"; finalImage = "images/section_4_2_1.png"; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A"; finalSection = "Invalid: A Private Serial Bus topology requires a Serial Modbus Master."; finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        }
+                    }
+                    if (isReadOnly) {
+                        if (finalFirmware && finalFirmware.includes("Modbus Router") || (finalAltFirmware && finalAltFirmware.includes("Modbus Router"))) {
+                            const roType = document.querySelector('input[name="ro_type"]:checked').value;
+                            if (roType === "5.2.2") {
+                                finalFirmware = "Modbus Router (Requires 2 Gateways)"; finalSection = "Section 5.2.2 - Accessing Read-Only and Read/Write Devices that have Two Serial Ports"; finalImage = "images/section_5_2_2.png";
+                            } else if (roType === "5.2.3") {
+                                finalFirmware = "Modbus Router (1 Gateway + Direct Ethernet Connection)"; finalSection = "Section 5.2.3 - Accessing Read-Only and Read/Write Devices that have One Serial Port and One Ethernet Port"; finalImage = "images/section_5_2_3.png";
+                            } else {
+                                finalFirmware = "Modbus Router"; finalSection = "Section 5.1 - Implementing the Disable Writes (Read Only) Option"; finalImage = "images/section_5_1.png";
+                            }
+                            finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        } else {
+                            finalFirmware = "N/A"; finalSection = "Invalid: Read-Only security is exclusively supported by Modbus Router firmware."; finalImage = ""; finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                        }
+                    }
+                    if (isIdConflicts) {
+                        const idType = document.querySelector('input[name="id_type"]:checked').value;
+                        if (idType === "6.5.1") {
+                            if (comboKey.startsWith("tcp_master_") && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave"))) {
+                                finalFirmware = "Modbus Router"; finalSection = "Section 6.5.1 - Modbus/TCP Master Communicating to Local Device(s) with Same Device ID"; finalImage = "images/section_6_5_1.png";
+                            } else { finalFirmware = "N/A"; finalSection = "Invalid Setup for Section 6.5.1"; finalImage = ""; }
+                        } else if (idType === "6.5.2") {
+                            if (comboKey.startsWith("serial_master_") && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave"))) {
+                                finalFirmware = "Modbus Router (Requires 2 Gateways)"; finalSection = "Section 6.5.2 - Modbus Serial Master Communicating to Local and Remote Devices with Same Device IDs"; finalImage = "images/section_6_5_2.png";
+                            } else { finalFirmware = "N/A"; finalSection = "Invalid Setup for Section 6.5.2"; finalImage = ""; }
+                        } else if (idType === "6.5.3") {
+                            if (comboKey.startsWith("serial_master_") && comboKey.includes("raw_ascii_serial")) {
+                                finalFirmware = "Modbus Router (Requires 3 Gateways)"; finalSection = "Section 6.5.3 - Modbus Serial Master Communicating to Two Remote Serial Raw/ASCII Devices"; finalImage = "images/section_6_5_3.png";
+                            } else { finalFirmware = "N/A"; finalSection = "Invalid Setup for Section 6.5.3"; finalImage = ""; }
+                        } else if (idType === "6.5.4") {
+                            if (comboKey.startsWith("serial_master_") && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave"))) {
+                                finalFirmware = "Modbus Router (Requires 2 Gateways)"; finalSection = "Section 6.5.4 - Merging Two Serial Modbus Networks"; finalImage = "images/section_6_5_4.png";
+                            } else { finalFirmware = "N/A"; finalSection = "Invalid Setup for Section 6.5.4"; finalImage = ""; }
+                        } else if (idType === "6.5.5") {
+                            if ((comboKey.startsWith("tcp_master_") || comboKey.startsWith("ethernet_master_") || comboKey.startsWith("modbus_over_ethernet_master_")) && (comboKey.includes("rtu_slave") || comboKey.includes("ascii_slave") || comboKey.includes("tcp_slave"))) {
+                                finalFirmware = "Modbus Router (Requires 2 or more Gateways)"; finalSection = "Section 6.5.5 - Providing Modbus Connectivity between Separate Ethernet Networks"; finalImage = "images/section_6_5_5.png";
+                            } else { finalFirmware = "N/A"; finalSection = "Invalid Setup for Section 6.5.5"; finalImage = ""; }
+                        }
+                        finalAltFirmware = null; finalAltSection = null; finalAltImage = null;
+                    }
+
+                    // Layout Population
+                    document.getElementById('out_firmware').innerText = finalFirmware;
+                    document.getElementById('out_section').innerText = finalSection;
+                    const imgEl = document.getElementById('out_image');
+                    imgEl.src = finalImage;
+                    imgEl.alt = finalSection;
+                    imgEl.style.display = finalImage ? "block" : "none";
+                    
+                    const inlineAltContainer = document.getElementById('inline_alt_firmware_container');
+                    if (finalAltFirmware) {
+                        if (!finalAltImage) {
+                            document.getElementById('out_inline_alt_firmware').innerText = finalAltFirmware;
+                            inlineAltContainer.style.display = "block";
+                            altContainer.style.display = "none";
+                        } else {
+                            inlineAltContainer.style.display = "none";
+                            document.getElementById('out_alt_firmware').innerText = finalAltFirmware;
+                            altContainer.style.display = "block";
+                            if (finalAltSection) {
+                                document.getElementById('out_alt_section').innerText = finalAltSection;
+                                document.getElementById('alt_section_container').style.display = "block";
+                            } else { document.getElementById('alt_section_container').style.display = "none"; }
+                            const imgAltEl = document.getElementById('out_image_alt');
+                            imgAltEl.src = finalAltImage;
+                            imgAltEl.alt = finalAltSection || "Alternate Diagram";
+                            imgAltEl.style.display = "block";
+                        }
+                    } else {
+                        inlineAltContainer.style.display = "none"; altContainer.style.display = "none";
+                    }
+                    
+                    panel.style.display = "block";
+                    panel.style.borderLeftColor = finalFirmware === "N/A" ? "#f44336" : "#4caf50";
+                } else {
+                    document.getElementById('out_firmware').innerText = "N/A";
+                    document.getElementById('out_section').innerText = "Invalid or missing combination in manual.";
+                    altContainer.style.display = "none";
+                    document.getElementById('out_image').style.display = "none";
+                    panel.style.display = "block";
+                    panel.style.borderLeftColor = "#f44336";
+                }
+            }
+        }
+		// --- PASTE IMAGE SUPPORT ---
+        document.getElementById('ai_input').addEventListener('paste', function(e) {
+            // Get the clipboard data
+            const items = (e.clipboardData || window.clipboardData).items;
+            
+            // Loop through clipboard items to find an image
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    
+                    // Create a DataTransfer object to programmatically assign the file to our hidden input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    
+                    const fileInput = document.getElementById('ai_image');
+                    fileInput.files = dataTransfer.files;
+                    
+                    // Update the UI text so the user knows the paste worked
+                    document.getElementById('file_name').innerText = "Pasted Image attached 📋";
+                    
+                    // Stop the browser from trying to paste image data as raw text into the textarea
+                    e.preventDefault(); 
+                    break; // Stop looping once we find the image
+                }
+            }
+        });
+        // Helper function to convert image file to Base64
+        function getBase64(file) {
+           return new Promise((resolve, reject) => {
+             const reader = new FileReader();
+             reader.readAsDataURL(file);
+             reader.onload = () => resolve(reader.result);
+             reader.onerror = error => reject(error);
+           });
+        }
+
+		// --- REAL API CALL TO CLOUDFLARE WORKER ---
+        async function queryAI() {
+            const input = document.getElementById('ai_input').value;
+            const fileInput = document.getElementById('ai_image');
+            const responseBox = document.getElementById('ai_response');
+            
+            if(!input.trim() && fileInput.files.length === 0) return;
+
+            // Show loading state
+            responseBox.style.display = "block";
+            responseBox.innerHTML = "<em>Consulting the Modbus Solution Manual and analyzing setup... please wait.</em>";
+
+            try {
+                let base64Image = null;
+                let mimeType = null;
+
+                // Process image if one was uploaded
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    mimeType = file.type;
+                    const fullBase64 = await getBase64(file);
+                    base64Image = fullBase64.split(',')[1]; 
+                }
+
+                const workerURL = "https://google-api-icdmmod.wsaiho.workers.dev/"; 
+
+                const response = await fetch(workerURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: input,
+                        image: base64Image,
+                        mimeType: mimeType
+                    }) 
+                });
+
+                // If the worker returns a 500, read the exact error message
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Detailed Server Error:", errorData);
+                    throw new Error(JSON.stringify(errorData.details || errorData.error, null, 2));
+                }
+
+                let aiOutputText = await response.text();
+                
+                // Clean up any potential markdown code blocks (```json ... ```) just in case
+                aiOutputText = aiOutputText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                const parsedAIJson = JSON.parse(aiOutputText);
+                applyAIResponse(parsedAIJson);
+
+            } catch (error) {
+                console.error("Error communicating with AI Worker:", error);
+                // Print the EXACT error to the screen
+                responseBox.innerHTML = `<strong style="color: #d32f2f;">Server Error:</strong> <pre style="background: #fff; padding: 10px; overflow-x: auto; font-size: 12px; color: #d32f2f;">${error.message}</pre>`;
+            }
+        }
+		
+        function applyAIResponse(data) {
+            // Display the text explanation
+            document.getElementById('ai_response').innerHTML = data.explanation;
+
+            // Reset the workspace silently to ensure a clean slate before populating
+            resetWorkspace(false); 
+
+            // Auto-populate Dropzone 1
+            if (data.node1) {
+                const el1 = document.getElementById(data.node1);
+                node1 = data.node1;
+                const z1 = document.getElementById('zone_1');
+                z1.innerText = el1.innerText;
+                z1.style.background = "#e3f2fd"; z1.style.border = "2px solid #2196f3"; z1.style.color = "#000";
+            }
+            
+            // Auto-populate Dropzone 2
+            if (data.node2) {
+                const el2 = document.getElementById(data.node2);
+                node2 = data.node2;
+                const z2 = document.getElementById('zone_2');
+                z2.innerText = el2.innerText;
+                z2.style.background = "#e3f2fd"; z2.style.border = "2px solid #2196f3"; z2.style.color = "#000";
+            }
+
+            // Auto-check the Modifiers
+            if (data.checkboxes) {
+                data.checkboxes.forEach(id => {
+                    const cb = document.getElementById(id);
+                    if (cb) {
+                        cb.checked = true;
+                        // Trigger the UI drops if the checkboxes have children
+                        if (id === 'read_only') toggleReadOnly();
+                        if (id === 'id_conflicts') toggleIdConflicts();
+                    }
+                });
+            }
+
+            // Auto-select specific radio buttons inside a modifier
+            if (data.radio) {
+                const rb = document.getElementById(data.radio);
+                if (rb) rb.checked = true;
+            }
+
+            // Trigger the native logic to load images/results
+            checkCombination();
+            updatePaletteState();
+        }
+
+        function resetWorkspace(clearAI = true) {
+            node1 = null;
+            node2 = null;
+            
+            const zone1 = document.getElementById('zone_1');
+            zone1.innerText = "Drop First Device Here";
+            zone1.style = "";
+
+            const zone2 = document.getElementById('zone_2');
+            zone2.innerText = "Drop Second Device Here";
+            zone2.style = "";
+
+            document.getElementById('diff_subnet').checked = false;
+            if(document.getElementById('multi_master')) document.getElementById('multi_master').checked = false;
+            if(document.getElementById('private_bus')) document.getElementById('private_bus').checked = false;
+            if(document.getElementById('remote_devices')) document.getElementById('remote_devices').checked = false;
+            
+            if(document.getElementById('read_only')) document.getElementById('read_only').checked = false;
+            if(document.getElementById('read_only_options')) document.getElementById('read_only_options').style.display = "none";
+            if(document.getElementById('ro_5_1')) document.getElementById('ro_5_1').checked = true;
+            
+            if(document.getElementById('id_conflicts')) document.getElementById('id_conflicts').checked = false;
+            if(document.getElementById('id_conflicts_options')) document.getElementById('id_conflicts_options').style.display = "none";
+            if(document.getElementById('id_6_5_1')) document.getElementById('id_6_5_1').checked = true;
+            
+            document.getElementById('result_panel').style.display = "none";
+
+            // Handle AI clear
+			if (clearAI) {
+                document.getElementById('ai_input').value = "";
+                document.getElementById('ai_image').value = ""; // Clear file
+                document.getElementById('file_name').innerText = ""; // Clear filename text
+                document.getElementById('ai_response').style.display = "none";
+                document.getElementById('ai_response').innerText = "";
+            }
+            updatePaletteState();
+        }
+    </script>
+</body>
+</html>
