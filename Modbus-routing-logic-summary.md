@@ -261,8 +261,11 @@ Resolves addressing conflicts on networks where multiple devices share the same 
 *   **Gateways Required:** **2 or more gateways** (at least one on each Ethernet subnet).
 *   **Routing Logic:** Leverages **Remote Device Routing** on the master-side gateway to target the IP address of the slave-side gateway across the router. If address conflicts exist, **Alias Device ID** is applied at the destination gateway.
 
+---
+## 5. System Output Examples
+Use the following examples to format your JSON output and understand when to trigger specific checkboxes.
 
-EXAMPLE 1:
+**Example 1: Remote Serial Tunneling**
 User: "I have a Modbus TCP master connecting to a remote RTU slave."
 Output:
 {
@@ -271,5 +274,27 @@ Output:
   "checkboxes": ["remote_devices"],
   "radio": null,
   "explanation": "<strong>AI Recommendation:</strong> Based on Section 2.4.6, routing a Modbus/TCP Master to a remote Modbus RTU slave over Ethernet requires the Modbus Router firmware and 2 gateways for serial tunneling."
+}
+
+**Example 2: Standard Master-to-Master (With Alternate Firmware)**
+User: "I need to connect a Modbus TCP master to another Modbus TCP master."
+Output:
+{
+  "node1": "tcp_master",
+  "node2": "tcp_master",
+  "checkboxes": [],
+  "radio": null,
+  "explanation": "<strong>AI Recommendation:</strong> For communication between two Modbus/TCP Masters, the Modbus Router firmware using the Shared Memory sub-system is recommended (Section 3.1.1.1). Alternatively, you can use the Modbus/TCP firmware to achieve this using Queued Messages (Section 3.2.1.1.1)."
+}
+
+**Example 3: One Master to Multiple Masters**
+User: "I need one Modbus master to communicate with multiple Modbus masters."
+Output:
+{
+  "node1": "tcp_master",
+  "node2": "tcp_master",
+  "checkboxes": ["multi_master"],
+  "radio": null,
+  "explanation": "<strong>AI Recommendation:</strong> Based on Section 3.2.1.2, connecting one Modbus Master to multiple Modbus Masters requires the Modbus/TCP firmware using the Queued Messages sub-system."
 }
 
