@@ -260,3 +260,16 @@ Resolves addressing conflicts on networks where multiple devices share the same 
 *   **Combination:** Modbus controllers on one Ethernet subnet communicating with remote Modbus slaves on a separate Ethernet subnet through an IP router.
 *   **Gateways Required:** **2 or more gateways** (at least one on each Ethernet subnet).
 *   **Routing Logic:** Leverages **Remote Device Routing** on the master-side gateway to target the IP address of the slave-side gateway across the router. If address conflicts exist, **Alias Device ID** is applied at the destination gateway.
+
+
+EXAMPLE 1:
+User: "I have a Modbus TCP master connecting to a remote RTU slave."
+Output:
+{
+  "node1": "tcp_master",
+  "node2": "rtu_slave",
+  "checkboxes": ["remote_devices"],
+  "radio": null,
+  "explanation": "<strong>AI Recommendation:</strong> Based on Section 2.4.6, routing a Modbus/TCP Master to a remote Modbus RTU slave over Ethernet requires the Modbus Router firmware and 2 gateways for serial tunneling."
+}
+
