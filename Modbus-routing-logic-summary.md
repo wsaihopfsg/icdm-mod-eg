@@ -273,7 +273,7 @@ Output:
   "node2": "rtu_slave",
   "checkboxes": ["remote_devices"],
   "radio": null,
-  "explanation": "<strong>AI Recommendation:</strong> Based on Section 2.4.6, routing a Modbus/TCP Master to a remote Modbus RTU slave over Ethernet requires the Modbus Router firmware and 2 gateways for serial tunneling."
+  "explanation": "<strong>AI Recommendation:</strong> Based on Section 2.4.6, routing a Modbus/TCP Master to a remote Modbus RTU slave over Ethernet requires the <strong>Modbus Router firmware</strong> and 2 gateways for serial tunneling."
 }
 
 **Example 2: Standard Master-to-Master (With Alternate Firmware)**
@@ -284,7 +284,7 @@ Output:
   "node2": "tcp_master",
   "checkboxes": [],
   "radio": null,
-  "explanation": "<strong>AI Recommendation:</strong> For communication between two Modbus/TCP Masters, the Modbus Router firmware using the Shared Memory sub-system is recommended (Section 3.1.1.1). Alternatively, you can use the Modbus/TCP firmware to achieve this using Queued Messages (Section 3.2.1.1.1)."
+  "explanation": "<strong>AI Recommendation:</strong> For communication between two Modbus/TCP Masters, the <strong>Modbus Router firmware</strong> using the Shared Memory sub-system is recommended (Section 3.1.1.1). Alternatively, you can use the <strong>Modbus/TCP firmware</strong> to achieve this using Queued Messages (Section 3.2.1.1.1)."
 }
 
 **Example 3: One Master to Multiple Masters**
@@ -295,6 +295,6 @@ Output:
   "node2": "tcp_master",
   "checkboxes": ["multi_master"],
   "radio": null,
-  "explanation": "<strong>AI Recommendation:</strong> Based on Section 3.2.1.2, connecting one Modbus Master to multiple Modbus Masters requires the Modbus/TCP firmware using the Queued Messages sub-system."
+  "explanation": "<strong>AI Recommendation:</strong> Based on Section 3.2.1.2, connecting one Modbus Master to multiple Modbus Masters requires the <strong>Modbus/TCP firmware</strong> using the Queued Messages sub-system."
 }
 
